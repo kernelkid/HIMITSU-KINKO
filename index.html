@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HIMITSU KINKO — Secure. Encrypt. Protect.</title>
+  <meta name="description" content="Himitsu Kinko is an advanced, privacy-first cybersecurity platform providing client-side AES-256-GCM file encryption, decryption, and secure ephemeral file sharing.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Tailwind CSS & External Config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+
+  <!-- Modular Stylesheet (Zero inline styles) -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-vault-950 text-slate-200 font-sans antialiased min-h-screen relative selection:bg-vault-cyan selection:text-vault-950 flex flex-col justify-between">
+
+  <!-- Background Grids & Atmosphere -->
+  <div class="fixed inset-0 grid-pattern pointer-events-none z-0"></div>
+  <div class="fixed top-0 left-1/4 w-96 h-96 bg-vault-cyan/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+  <div class="fixed bottom-10 right-1/4 w-[32rem] h-[32rem] bg-vault-electric/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+  <!-- Shared File Recipient Download Banner -->
+  <div id="recipient-download-banner" class="hidden relative z-50 bg-gradient-to-r from-vault-cyan/20 via-vault-electric/20 to-vault-cyan/20 border-b border-vault-cyan/40 p-4">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-vault-cyan/20 text-vault-cyan flex items-center justify-center text-xl shrink-0">
+          <i class="fa-solid fa-link"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="recipient-banner-title" class="font-heading font-bold text-white text-base">Secure Shared File Received</span>
+            <span id="recipient-banner-badge" class="px-2.5 py-0.5 rounded-full bg-vault-cyan/20 text-vault-cyan text-xs font-mono font-bold">1-Hour Expiring Link</span>
+          </div>
+          <p id="recipient-banner-desc" class="text-xs text-slate-300 font-mono mt-0.5">
+            File: <span id="recipient-filename" class="text-white font-bold">payload</span> (<span id="recipient-filesize">0 KB</span>) · AES-256-GCM Encrypted
+          </p>
+        </div>
+      </div>
+      <a id="recipient-action-btn" href="#" class="px-6 py-2.5 rounded-xl cyber-cyan-gradient text-vault-950 font-heading font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 flex items-center gap-2 shrink-0">
+        <i class="fa-solid fa-download"></i> Download Encrypted File
+      </a>
+    </div>
+  </div>
+
+  <!-- NAVIGATION BAR -->
+  <header class="sticky top-0 z-50 bg-vault-950/85 backdrop-blur-xl border-b border-vault-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="#hero" class="flex items-center gap-3.5 group">
+        <div class="w-11 h-11 rounded-xl cyber-cyan-gradient p-[2px] shadow-lg shadow-vault-cyan/20 group-hover:shadow-vault-cyan/40 transition-all duration-300">
+          <div class="w-full h-full bg-vault-950 rounded-[10px] flex items-center justify-center">
+            <i class="fa-solid fa-vault text-vault-cyan text-xl group-hover:scale-110 transition-transform"></i>
+          </div>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="font-heading font-black text-2xl tracking-wider text-white">HIMITSU KINKO</span>
+            <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-vault-cyan/15 text-vault-cyan rounded border border-vault-cyan/30">Zero-Knowledge</span>
+          </div>
+          <span class="text-[11px] font-mono text-slate-400 tracking-widest uppercase">Secure. Encrypt. Protect.</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Links (Clean, No Public Admin Link) -->
+      <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-slate-300">
+        <a href="#dashboard" class="hover:text-vault-cyan transition-colors flex items-center gap-1.5">
+          <i class="fa-solid fa-terminal text-xs text-vault-cyan"></i> Console
+        </a>
+        <a href="#security-features" class="hover:text-vault-cyan transition-colors flex items-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-xs text-vault-cyan"></i> Architecture
+        </a>
+        <a href="#privacy" class="hover:text-vault-cyan transition-colors flex items-center gap-1.5">
+          <i class="fa-solid fa-user-shield text-xs text-vault-cyan"></i> Privacy
+        </a>
+        <a href="#faq" class="hover:text-vault-cyan transition-colors flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-question text-xs text-vault-cyan"></i> FAQ
+        </a>
+      </nav>
+
+      <!-- User Authentication & Action Area -->
+      <div class="flex items-center gap-3">
+        <!-- Unauthenticated View -->
+        <div id="nav-unauth" class="flex items-center gap-2">
+          <button onclick="openAuthModal()" class="px-3.5 py-2 rounded-lg bg-vault-850 hover:bg-vault-800 text-slate-300 text-xs font-mono tracking-wider border border-vault-700 hover:border-vault-cyan/40 transition-all">
+            <i class="fa-solid fa-user mr-1 text-vault-cyan"></i> Login
+          </button>
+        </div>
+
+        <!-- Authenticated View -->
+        <div id="nav-auth" class="hidden flex items-center gap-2">
+          <span class="text-xs font-mono text-slate-400 hidden sm:inline">Signed in: <strong id="nav-user-handle" class="text-vault-cyan">user</strong></span>
+          <button onclick="handleLogout()" class="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-mono border border-rose-500/30 transition-all" title="Sign Out">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+
+        <a href="#dashboard" onclick="switchDashboardTab('encrypt')" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg cyber-cyan-gradient text-vault-950 text-xs font-mono font-black tracking-wider uppercase shadow-md shadow-vault-cyan/20 hover:brightness-110 transition-all">
+          <i class="fa-solid fa-lock"></i> Encrypt
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="relative z-10 flex-grow">
+
+    <!-- HERO SECTION -->
+    <section id="hero" class="relative pt-16 pb-20 overflow-hidden">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <!-- Hero Left Column -->
+          <div class="lg:col-span-7 flex flex-col items-start text-left">
+            
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-vault-850/90 border border-vault-cyan/30 text-vault-cyan text-xs font-mono font-bold tracking-widest uppercase mb-6 shadow-inner">
+              <span class="w-2 h-2 rounded-full bg-vault-cyan animate-ping"></span>
+              <span>Client-Side AES-256-GCM Encryption</span>
+            </div>
+
+            <h1 class="font-heading font-black text-4xl sm:text-6xl xl:text-7xl leading-[1.08] tracking-tight text-white mb-6">
+              Protect Your Files.<br>
+              <span class="cyber-gradient-text">Protect Your Privacy.</span>
+            </h1>
+
+            <p class="text-slate-300 text-lg sm:text-xl font-normal leading-relaxed max-w-2xl mb-8">
+              Encrypt files locally inside your browser memory with zero server retention. Download directly without an account, or create secure self-destructing links.
+            </p>
+
+            <div class="flex flex-wrap items-center gap-4 sm:gap-5 w-full sm:w-auto">
+              <a href="#dashboard" onclick="switchDashboardTab('encrypt')" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl cyber-cyan-gradient text-vault-950 font-heading font-extrabold text-base uppercase tracking-wider shadow-lg shadow-vault-cyan/25 hover:shadow-vault-cyan/45 hover:scale-105 active:scale-95 transition-all">
+                <i class="fa-solid fa-lock text-lg"></i>
+                <span>Encrypt a File</span>
+              </a>
+
+              <a href="#dashboard" onclick="switchDashboardTab('decrypt')" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-vault-850 hover:bg-vault-800 text-white font-heading font-bold text-base uppercase tracking-wider border border-vault-700 hover:border-vault-cyan/50 shadow-md hover:scale-105 active:scale-95 transition-all">
+                <i class="fa-solid fa-key text-vault-cyan"></i>
+                <span>Decrypt a File</span>
+              </a>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6 pt-8 mt-8 border-t border-vault-800/80 w-full max-w-lg">
+              <div>
+                <div class="font-mono font-bold text-vault-cyan text-xl">256-bit</div>
+                <div class="text-xs text-slate-400 mt-0.5">AES Authenticated</div>
+              </div>
+              <div>
+                <div class="font-mono font-bold text-vault-emerald text-xl">1-Hour</div>
+                <div class="text-xs text-slate-400 mt-0.5">Auto Expiration TTL</div>
+              </div>
+              <div>
+                <div class="font-mono font-bold text-vault-electric text-xl">0 bytes</div>
+                <div class="text-xs text-slate-400 mt-0.5">Permanent Storage</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Hero Right Column: Security Card -->
+          <div class="lg:col-span-5 flex justify-center">
+            <div class="relative w-full max-w-md">
+              <div class="absolute -inset-1 cyber-cyan-gradient rounded-3xl opacity-25 blur-xl animate-pulse-slow"></div>
+              
+              <div class="relative cyber-card rounded-2xl p-6 sm:p-8 overflow-hidden border border-vault-cyan/30">
+                <div class="flex items-center justify-between pb-4 border-b border-vault-800 font-mono text-xs text-slate-400">
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+                    <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+                    <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+                  </div>
+                  <span class="text-vault-cyan font-bold tracking-wider">SECURE_SANDBOX</span>
+                </div>
+
+                <div class="py-6 flex flex-col gap-4">
+                  <div class="bg-vault-950/80 rounded-xl p-4 border border-vault-800 flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-lg bg-vault-850 flex items-center justify-center text-rose-400 text-xl">
+                      <i class="fa-solid fa-file-shield"></i>
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold text-white font-mono">Sensitive Document</div>
+                      <div class="text-xs text-slate-400">Never transmitted to servers</div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-center gap-2 text-xs font-mono text-vault-cyan">
+                    <i class="fa-solid fa-arrows-up-down"></i>
+                    <span>In-Memory Web Cryptography</span>
+                  </div>
+
+                  <div class="bg-vault-950/80 rounded-xl p-4 border border-vault-cyan/40 flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-lg bg-vault-cyan/20 flex items-center justify-center text-vault-cyan text-xl">
+                      <i class="fa-solid fa-shield-check"></i>
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold text-vault-cyan font-mono">Protected .enc Package</div>
+                      <div class="text-xs text-slate-400">128-bit Authentication Tag</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pt-4 border-t border-vault-800 flex items-center justify-between text-xs font-mono text-slate-400">
+                  <span class="text-vault-emerald flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check"></i> Zero-Knowledge
+                  </span>
+                  <span>Local Execution</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- DASHBOARD SECTION (File Encryption & Decryption) -->
+    <section id="dashboard" class="py-20 relative bg-vault-900/60 border-y border-vault-800/80">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-3xl mx-auto mb-12">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-vault-800 border border-vault-cyan/30 text-vault-cyan text-xs font-mono uppercase tracking-wider mb-3">
+            <i class="fa-solid fa-sliders"></i> Cryptographic Operations Center
+          </div>
+          <h2 class="font-heading font-black text-3xl sm:text-5xl text-white tracking-tight">
+            Security Management Dashboard
+          </h2>
+          <p class="text-slate-300 text-base sm:text-lg mt-3">
+            Files are processed locally inside your browser memory using hardware-accelerated Web Cryptography.
+          </p>
+        </div>
+
+        <!-- Dashboard Master Card Container -->
+        <div class="cyber-card rounded-3xl p-6 sm:p-10 border border-vault-700 shadow-2xl relative">
+          
+          <!-- Tab Navigation Switcher -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-8 border-b border-vault-800">
+            <div class="inline-flex p-1.5 rounded-2xl bg-vault-950 border border-vault-800 w-full sm:w-auto">
+              <button id="tab-btn-encrypt" onclick="switchDashboardTab('encrypt')" class="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl font-heading font-bold text-sm tracking-wider uppercase transition-all cyber-cyan-gradient text-vault-950 shadow-md">
+                <i class="fa-solid fa-lock"></i>
+                <span>1. Encrypt File</span>
+              </button>
+              <button id="tab-btn-decrypt" onclick="switchDashboardTab('decrypt')" class="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl font-heading font-bold text-sm tracking-wider uppercase text-slate-400 hover:text-white transition-all">
+                <i class="fa-solid fa-unlock-keyhole"></i>
+                <span>2. Decrypt File</span>
+              </button>
+            </div>
+
+            <div id="crypto-state-badge" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-vault-800 text-slate-300 font-mono text-xs border border-vault-700">
+              <span class="w-2.5 h-2.5 rounded-full bg-vault-cyan animate-pulse"></span>
+              <span id="crypto-state-text">Status: Ready for input</span>
+            </div>
+          </div>
+
+          <!-- MODULE 1: FILE ENCRYPTION -->
+          <div id="module-encrypt" class="mt-8 transition-all duration-300">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              
+              <div class="lg:col-span-7 flex flex-col gap-6">
+                <div>
+                  <label class="block font-heading font-bold text-sm text-slate-200 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>1. Select Sensitive File</span>
+                    <span class="text-xs font-mono text-slate-400 font-normal">Max: 200MB</span>
+                  </label>
+                  
+                  <div id="enc-drop-zone" class="border-2 border-dashed border-vault-700 hover:border-vault-cyan/60 rounded-2xl p-8 text-center cursor-pointer transition-all bg-vault-950/60 flex flex-col items-center justify-center group relative overflow-hidden">
+                    <input type="file" id="enc-file-input" class="hidden">
+                    
+                    <div class="w-16 h-16 rounded-2xl bg-vault-850 group-hover:bg-vault-800 flex items-center justify-center text-vault-cyan text-3xl mb-4 transition-transform group-hover:scale-110 shadow-inner">
+                      <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+
+                    <p class="font-heading font-bold text-base text-white group-hover:text-vault-cyan transition-colors">
+                      Drag & drop your file here, or <span class="text-vault-cyan underline underline-offset-4">browse</span>
+                    </p>
+                    <p class="text-xs text-slate-400 mt-2 font-mono">
+                      PDF, DOCX, ZIP, PNG, JPG, MP4, JSON, TXT, CSV, etc.
+                    </p>
+                  </div>
+                </div>
+
+                <div id="enc-file-info" class="hidden bg-vault-850 rounded-xl p-4 border border-vault-cyan/30 flex items-center justify-between">
+                  <div class="flex items-center gap-3.5 overflow-hidden">
+                    <div class="w-10 h-10 rounded-lg bg-vault-cyan/15 text-vault-cyan flex items-center justify-center text-xl shrink-0">
+                      <i class="fa-solid fa-file-lines"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                      <div id="enc-filename" class="font-mono font-bold text-sm text-white truncate">document.pdf</div>
+                      <div id="enc-filesize" class="font-mono text-xs text-slate-400">1.42 MB</div>
+                    </div>
+                  </div>
+                  <button type="button" onclick="clearEncryptFile()" class="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors" title="Remove File">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <div class="flex items-center justify-between">
+                    <label for="enc-password" class="font-heading font-bold text-sm text-slate-200 uppercase tracking-wider">
+                      2. Set Master Encryption Password
+                    </label>
+                    <span class="text-xs font-mono text-vault-cyan" id="strength-label">Strength: Awaiting input</span>
+                  </div>
+
+                  <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                      <i class="fa-solid fa-key text-sm"></i>
+                    </div>
+                    <input type="password" id="enc-password" placeholder="Enter a strong, unique password..." class="w-full pl-10 pr-12 py-3.5 bg-vault-950 border border-vault-700 focus:border-vault-cyan focus:ring-1 focus:ring-vault-cyan rounded-xl text-white font-mono text-sm placeholder:text-slate-500 outline-none transition-all">
+                    <button type="button" onclick="togglePasswordVisibility('enc-password', 'enc-pwd-icon')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-vault-cyan">
+                      <i id="enc-pwd-icon" class="fa-regular fa-eye text-sm"></i>
+                    </button>
+                  </div>
+
+                  <div class="w-full bg-vault-950 rounded-full h-1.5 overflow-hidden mt-1">
+                    <div id="strength-bar" class="h-full w-0 transition-all duration-300 rounded-full"></div>
+                  </div>
+
+                  <div class="p-3.5 rounded-xl bg-vault-950/70 border border-vault-800 text-xs text-slate-300 flex items-start gap-2.5 mt-1">
+                    <i class="fa-solid fa-shield-halved text-vault-cyan text-sm mt-0.5 shrink-0"></i>
+                    <div>
+                      <strong class="text-white">Zero-Knowledge Guarantee:</strong> We do not store your password or file data. If you lose your password, the encrypted file cannot be restored.
+                    </div>
+                  </div>
+                </div>
+
+                <button type="button" id="enc-btn-execute" onclick="executeEncryption()" class="w-full py-4 rounded-xl cyber-cyan-gradient text-vault-950 font-heading font-black text-base uppercase tracking-wider shadow-lg shadow-vault-cyan/25 hover:shadow-vault-cyan/45 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-3">
+                  <i class="fa-solid fa-shield-halved text-lg"></i>
+                  <span>Encrypt & Seal File</span>
+                </button>
+              </div>
+
+              <!-- Right: Telemetry & Actions -->
+              <div class="lg:col-span-5 flex flex-col gap-6">
+                <div class="bg-vault-950/80 rounded-2xl p-6 border border-vault-800 flex flex-col justify-between h-full">
+                  <div>
+                    <h3 class="font-heading font-bold text-sm text-slate-200 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <i class="fa-solid fa-microchip text-vault-cyan"></i> Cryptographic Telemetry
+                    </h3>
+
+                    <div class="space-y-3 text-xs font-mono">
+                      <div class="flex items-center justify-between pb-2 border-b border-vault-850">
+                        <span class="text-slate-400">Cipher Algorithm:</span>
+                        <span class="text-white font-bold">AES-256-GCM (Authenticated)</span>
+                      </div>
+                      <div class="flex items-center justify-between pb-2 border-b border-vault-850">
+                        <span class="text-slate-400">Key Derivation:</span>
+                        <span class="text-white font-bold">PBKDF2 (100,000 rounds)</span>
+                      </div>
+                      <div class="flex items-center justify-between pb-2 border-b border-vault-850">
+                        <span class="text-slate-400">Cryptographic Salt:</span>
+                        <span id="telemetry-salt" class="text-slate-300">Auto-generated</span>
+                      </div>
+                      <div class="flex items-center justify-between pb-2 border-b border-vault-850">
+                        <span class="text-slate-400">Initialization Vector:</span>
+                        <span id="telemetry-iv" class="text-slate-300">Auto-generated</span>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <span class="text-slate-400">Memory Purge:</span>
+                        <span class="text-vault-cyan font-bold">Auto-Purge on Clear</span>
+                      </div>
+                    </div>
+
+                    <div id="enc-progress-container" class="hidden mt-6">
+                      <div class="flex items-center justify-between text-xs font-mono mb-1.5">
+                        <span class="text-vault-cyan font-bold" id="enc-progress-status">Deriving 256-bit key...</span>
+                        <span class="text-white font-bold" id="enc-progress-percentage">0%</span>
+                      </div>
+                      <div class="w-full bg-vault-900 rounded-full h-2 overflow-hidden border border-vault-800">
+                        <div id="enc-progress-bar" class="h-full bg-vault-cyan rounded-full transition-all duration-200 w-0"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Output Actions Box -->
+                  <div id="enc-output-box" class="hidden mt-6 bg-vault-900 rounded-xl p-5 border border-vault-emerald/40 space-y-3">
+                    <div class="flex items-center gap-3">
+                      <div class="w-9 h-9 rounded-full bg-vault-emerald/20 text-vault-emerald flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-lock"></i>
+                      </div>
+                      <div>
+                        <div class="font-heading font-bold text-sm text-white">Encryption Complete!</div>
+                        <div class="text-[11px] font-mono text-slate-400">Format: .enc envelope + 128-bit tag</div>
+                      </div>
+                    </div>
+
+                    <!-- Direct Download (No Login Required) -->
+                    <a id="enc-download-btn" href="#" download="encrypted.enc" class="w-full py-3 px-4 rounded-lg bg-vault-emerald hover:bg-emerald-400 text-vault-950 font-heading font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all">
+                      <i class="fa-solid fa-download"></i>
+                      <span>Download .enc File (No Login)</span>
+                    </a>
+
+                    <!-- Expiring Share Link (Requires Login) -->
+                    <button type="button" onclick="promptShareLink()" class="w-full py-2.5 px-4 rounded-lg bg-vault-850 hover:bg-vault-800 text-vault-cyan border border-vault-cyan/40 hover:border-vault-cyan font-heading font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all">
+                      <i class="fa-solid fa-share-nodes"></i>
+                      <span>Generate Share Link (Login Required)</span>
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- MODULE 2: FILE DECRYPTION -->
+          <div id="module-decrypt" class="hidden mt-8 transition-all duration-300">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              
+              <div class="lg:col-span-7 flex flex-col gap-6">
+                <div>
+                  <label class="block font-heading font-bold text-sm text-slate-200 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>1. Select Encrypted File</span>
+                    <span class="text-xs font-mono text-slate-400 font-normal">.enc envelopes</span>
+                  </label>
+                  
+                  <div id="dec-drop-zone" class="border-2 border-dashed border-vault-700 hover:border-vault-cyan/60 rounded-2xl p-8 text-center cursor-pointer transition-all bg-vault-950/60 flex flex-col items-center justify-center group relative overflow-hidden">
+                    <input type="file" id="dec-file-input" class="hidden">
+                    
+                    <div class="w-16 h-16 rounded-2xl bg-vault-850 group-hover:bg-vault-800 flex items-center justify-center text-vault-cyan text-3xl mb-4 transition-transform group-hover:scale-110 shadow-inner">
+                      <i class="fa-solid fa-file-shield"></i>
+                    </div>
+
+                    <p class="font-heading font-bold text-base text-white group-hover:text-vault-cyan transition-colors">
+                      Drag & drop your encrypted file, or <span class="text-vault-cyan underline underline-offset-4">browse</span>
+                    </p>
+                    <p class="text-xs text-slate-400 mt-2 font-mono">
+                      Upload your protected .enc package
+                    </p>
+                  </div>
+                </div>
+
+                <div id="dec-file-info" class="hidden bg-vault-850 rounded-xl p-4 border border-vault-cyan/30 flex items-center justify-between">
+                  <div class="flex items-center gap-3.5 overflow-hidden">
+                    <div class="w-10 h-10 rounded-lg bg-vault-cyan/15 text-vault-cyan flex items-center justify-center text-xl shrink-0">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                      <div id="dec-filename" class="font-mono font-bold text-sm text-white truncate">archive.enc</div>
+                      <div id="dec-filesize" class="font-mono text-xs text-slate-400">1.45 MB</div>
+                    </div>
+                  </div>
+                  <button type="button" onclick="clearDecryptFile()" class="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors" title="Remove File">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <div class="flex items-center justify-between">
+                    <label for="dec-password" class="font-heading font-bold text-sm text-slate-200 uppercase tracking-wider">
+                      2. Enter Decryption Password
+                    </label>
+                  </div>
+
+                  <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                      <i class="fa-solid fa-lock-open text-sm"></i>
+                    </div>
+                    <input type="password" id="dec-password" placeholder="Enter the exact password used during encryption..." class="w-full pl-10 pr-12 py-3.5 bg-vault-950 border border-vault-700 focus:border-vault-cyan focus:ring-1 focus:ring-vault-cyan rounded-xl text-white font-mono text-sm placeholder:text-slate-500 outline-none transition-all">
+                    <button type="button" onclick="togglePasswordVisibility('dec-password', 'dec-pwd-icon')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-vault-cyan">
+                      <i id="dec-pwd-icon" class="fa-regular fa-eye text-sm"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div id="dec-error-banner" class="hidden p-4 rounded-xl bg-rose-950/50 border border-rose-500/50 text-rose-300 text-xs flex items-start gap-3">
+                  <i class="fa-solid fa-circle-exclamation text-rose-400 text-base shrink-0 mt-0.5"></i>
+                  <div>
+                    <strong class="text-rose-200 font-bold block mb-1">Cryptographic Authentication Failed!</strong>
+                    <span id="dec-error-message">Invalid master password or the encrypted file data has been tampered with.</span>
+                  </div>
+                </div>
+
+                <button type="button" id="dec-btn-execute" onclick="executeDecryption()" class="w-full py-4 rounded-xl bg-vault-800 hover:bg-vault-750 text-white font-heading font-black text-base uppercase tracking-wider border border-vault-cyan/40 hover:border-vault-cyan shadow-lg hover:shadow-vault-cyan/20 active:scale-98 transition-all flex items-center justify-center gap-3">
+                  <i class="fa-solid fa-key text-vault-cyan"></i>
+                  <span>Authenticate & Decrypt</span>
+                </button>
+              </div>
+
+              <!-- Right: Verification Telemetry -->
+              <div class="lg:col-span-5 flex flex-col gap-6">
+                <div class="bg-vault-950/80 rounded-2xl p-6 border border-vault-800 flex flex-col justify-between h-full">
+                  <div>
+                    <h3 class="font-heading font-bold text-sm text-slate-200 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <i class="fa-solid fa-shield-check text-vault-cyan"></i> Integrity & Verification Check
+                    </h3>
+
+                    <p class="text-xs text-slate-400 leading-relaxed font-sans mb-4">
+                      Utilizes <strong>Galois/Counter Mode (AES-GCM)</strong> authenticated cryptography. Decryption only succeeds if the password derives the exact cryptographic key and the 128-bit authentication tag proves zero tampering.
+                    </p>
+
+                    <div class="space-y-3 text-xs font-mono">
+                      <div class="flex items-center justify-between pb-2 border-b border-vault-850">
+                        <span class="text-slate-400">Header Envelope:</span>
+                        <span id="dec-tele-header" class="text-slate-300">Awaiting payload</span>
+                      </div>
+                      <div class="flex items-center justify-between pb-2 border-b border-vault-850">
+                        <span class="text-slate-400">Tag Verification:</span>
+                        <span id="dec-tele-tag" class="text-slate-300">Unverified</span>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <span class="text-slate-400">Restored File Name:</span>
+                        <span id="dec-tele-orig-name" class="text-slate-300 truncate max-w-[150px]">--</span>
+                      </div>
+                    </div>
+
+                    <div id="dec-progress-container" class="hidden mt-6">
+                      <div class="flex items-center justify-between text-xs font-mono mb-1.5">
+                        <span class="text-vault-cyan font-bold" id="dec-progress-status">Verifying authentication tag...</span>
+                        <span class="text-white font-bold" id="dec-progress-percentage">0%</span>
+                      </div>
+                      <div class="w-full bg-vault-900 rounded-full h-2 overflow-hidden border border-vault-800">
+                        <div id="dec-progress-bar" class="h-full bg-vault-emerald rounded-full transition-all duration-200 w-0"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="dec-output-box" class="hidden mt-6 bg-vault-900 rounded-xl p-5 border border-vault-emerald/40">
+                    <div class="flex items-center gap-3 mb-3">
+                      <div class="w-9 h-9 rounded-full bg-vault-emerald/20 text-vault-emerald flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-circle-check"></i>
+                      </div>
+                      <div class="overflow-hidden">
+                        <div class="font-heading font-bold text-sm text-white">Decryption Successful!</div>
+                        <div id="dec-output-name" class="text-[11px] font-mono text-vault-emerald truncate">document.pdf</div>
+                      </div>
+                    </div>
+
+                    <a id="dec-download-btn" href="#" download="recovered_file" class="w-full py-3 px-4 rounded-lg bg-vault-cyan hover:bg-vault-cyanGlow text-vault-950 font-heading font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all">
+                      <i class="fa-solid fa-download"></i>
+                      <span>Save Restored File</span>
+                    </a>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- USER'S ACTIVE TEMPORARY FILES -->
+        <div id="my-files-section" class="hidden mt-10">
+          <div class="cyber-card rounded-2xl p-6 border border-vault-700">
+            <div class="flex items-center justify-between pb-4 border-b border-vault-800 mb-4">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-vault-cyan"></i>
+                <h3 class="font-heading font-bold text-white text-base">My Active Temporary Sharing Links</h3>
+              </div>
+              <span class="text-xs font-mono text-slate-400">Auto-destructs after 1 hour</span>
+            </div>
+            <div id="my-files-list" class="space-y-3">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION: SECURITY ARCHITECTURE -->
+    <section id="security-features" class="py-24 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-vault-850 border border-vault-cyan/30 text-vault-cyan text-xs font-mono uppercase tracking-wider mb-3">
+            <i class="fa-solid fa-shield-halved"></i> Engineering Transparency
+          </div>
+          <h2 class="font-heading font-black text-3xl sm:text-5xl text-white tracking-tight">
+            Security by Design
+          </h2>
+          <p class="text-slate-300 text-base sm:text-lg mt-3">
+            Built on verified cryptography and zero-knowledge architecture.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          
+          <div class="cyber-card rounded-2xl p-7 border border-vault-800 flex flex-col justify-between group">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-vault-cyan/10 border border-vault-cyan/30 flex items-center justify-center text-vault-cyan text-2xl mb-5 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-lock"></i>
+              </div>
+              <h3 class="font-heading font-extrabold text-xl text-white mb-2.5">
+                Authenticated AES-256-GCM
+              </h3>
+              <p class="text-slate-300 text-sm leading-relaxed">
+                Protects files using authenticated Galois/Counter Mode with 100,000 PBKDF2-HMAC-SHA256 iterations to resist dictionary attacks.
+              </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-vault-800/80 font-mono text-[11px] text-vault-cyan flex items-center gap-2">
+              <i class="fa-solid fa-check"></i> NIST SP 800-38D Standard
+            </div>
+          </div>
+
+          <div class="cyber-card rounded-2xl p-7 border border-vault-800 flex flex-col justify-between group">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-vault-electric/10 border border-vault-electric/30 flex items-center justify-center text-vault-electric text-2xl mb-5 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-user-shield"></i>
+              </div>
+              <h3 class="font-heading font-extrabold text-xl text-white mb-2.5">
+                Zero-Knowledge Privacy
+              </h3>
+              <p class="text-slate-300 text-sm leading-relaxed">
+                Zero permanent file storage. No tracking cookies or advertising pixels. Cryptography executes strictly in client memory.
+              </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-vault-800/80 font-mono text-[11px] text-vault-electric flex items-center gap-2">
+              <i class="fa-solid fa-check"></i> Zero-Knowledge Architecture
+            </div>
+          </div>
+
+          <div class="cyber-card rounded-2xl p-7 border border-vault-800 flex flex-col justify-between group">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-vault-emerald/10 border border-vault-emerald/30 flex items-center justify-center text-vault-emerald text-2xl mb-5 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-bolt"></i>
+              </div>
+              <h3 class="font-heading font-extrabold text-xl text-white mb-2.5">
+                Client Sandbox Execution
+              </h3>
+              <p class="text-slate-300 text-sm leading-relaxed">
+                Encryption occurs directly inside your browser's private memory via native Web Crypto. Raw file contents never traverse the network.
+              </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-vault-800/80 font-mono text-[11px] text-vault-emerald flex items-center gap-2">
+              <i class="fa-solid fa-check"></i> In-Memory Sandbox
+            </div>
+          </div>
+
+          <div class="cyber-card rounded-2xl p-7 border border-vault-800 flex flex-col justify-between group">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-vault-warning/10 border border-vault-warning/30 flex items-center justify-center text-vault-warning text-2xl mb-5 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-hourglass-half"></i>
+              </div>
+              <h3 class="font-heading font-extrabold text-xl text-white mb-2.5">
+                1-Hour Auto Deletion
+              </h3>
+              <p class="text-slate-300 text-sm leading-relaxed">
+                When sharing links are generated, temporary storage enforces an automatic 60-minute expiration countdown with active cleanup.
+              </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-vault-800/80 font-mono text-[11px] text-vault-warning flex items-center gap-2">
+              <i class="fa-solid fa-check"></i> Strict 1-Hour TTL
+            </div>
+          </div>
+
+          <div class="cyber-card rounded-2xl p-7 border border-vault-800 flex flex-col justify-between group">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 text-2xl mb-5 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-fire"></i>
+              </div>
+              <h3 class="font-heading font-extrabold text-xl text-white mb-2.5">
+                One-Time "Burn" Links
+              </h3>
+              <p class="text-slate-300 text-sm leading-relaxed">
+                Create self-destructing links that burn immediately upon the first successful download, preventing multiple accesses.
+              </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-vault-800/80 font-mono text-[11px] text-rose-400 flex items-center gap-2">
+              <i class="fa-solid fa-check"></i> Burn After Reading
+            </div>
+          </div>
+
+          <div class="cyber-card rounded-2xl p-7 border border-vault-800 flex flex-col justify-between group">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-purple-400/10 border border-purple-400/30 flex items-center justify-center text-purple-400 text-2xl mb-5 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-fingerprint"></i>
+              </div>
+              <h3 class="font-heading font-extrabold text-xl text-white mb-2.5">
+                128-Bit Integrity Tag
+              </h3>
+              <p class="text-slate-300 text-sm leading-relaxed">
+                Detects unauthorized tampering using Galois Message Authentication Code. Any bit flip causes an immediate decryption rejection.
+              </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-vault-800/80 font-mono text-[11px] text-purple-400 flex items-center gap-2">
+              <i class="fa-solid fa-check"></i> Tamper-Evident Authentication
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION: PRIVACY -->
+    <section id="privacy" class="py-24 relative overflow-hidden">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="cyber-card rounded-3xl p-8 sm:p-14 border border-vault-cyan/40 relative overflow-hidden shadow-2xl">
+          <div class="absolute -right-20 -top-20 w-80 h-80 bg-vault-cyan/15 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div class="relative z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-vault-850 border border-vault-cyan/40 text-vault-cyan text-xs font-mono uppercase tracking-wider mb-4">
+              <i class="fa-solid fa-hand-holding-hand"></i> Data Sovereignty Pledge
+            </div>
+
+            <h2 class="font-heading font-black text-3xl sm:text-5xl text-white tracking-tight mb-6">
+              “Your Data Belongs to You.”
+            </h2>
+
+            <div class="space-y-4 text-slate-300 text-base sm:text-lg leading-relaxed">
+              <p>
+                <strong>Himitsu Kinko</strong> is built on data minimization and transient ephemeral lifecycles. We process all files locally inside your client browser, without collecting or storing your plaintext files or passwords.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 mt-8 border-t border-vault-800">
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-server text-vault-emerald text-xl"></i>
+                <div class="text-xs">
+                  <div class="font-bold text-white">No Permanent Database</div>
+                  <div class="text-slate-400">Files purged automatically</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-eye-slash text-vault-cyan text-xl"></i>
+                <div class="text-xs">
+                  <div class="font-bold text-white">Zero Knowledge</div>
+                  <div class="text-slate-400">Zero file/key visibility</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-cookie-bite text-vault-warning text-xl"></i>
+                <div class="text-xs">
+                  <div class="font-bold text-white">No Tracking Cookies</div>
+                  <div class="text-slate-400">Zero ad profiling</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION: FAQ -->
+    <section id="faq" class="py-20 bg-vault-900/60 border-t border-vault-800/80 relative">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center mb-12">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-vault-800 border border-vault-cyan/30 text-vault-cyan text-xs font-mono uppercase tracking-wider mb-3">
+            <i class="fa-solid fa-circle-question"></i> Answers
+          </div>
+          <h2 class="font-heading font-black text-3xl sm:text-4xl text-white tracking-tight">
+            Frequently Asked Questions
+          </h2>
+        </div>
+
+        <div class="space-y-4">
+          <div class="cyber-card rounded-xl border border-vault-800 overflow-hidden">
+            <button onclick="toggleFaq(1)" class="w-full p-5 text-left flex items-center justify-between gap-4 font-heading font-bold text-base text-white hover:text-vault-cyan transition-colors">
+              <span>Do I need an account to encrypt and download files?</span>
+              <i id="faq-icon-1" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+            </button>
+            <div id="faq-answer-1" class="hidden p-5 pt-0 text-sm text-slate-300 font-normal leading-relaxed border-t border-vault-850">
+              No! Anyone can drop a file, enter a password, and immediately download the protected .enc file without an account. Login is only required if you choose to generate temporary expiring download links.
+            </div>
+          </div>
+
+          <div class="cyber-card rounded-xl border border-vault-800 overflow-hidden">
+            <button onclick="toggleFaq(2)" class="w-full p-5 text-left flex items-center justify-between gap-4 font-heading font-bold text-base text-white hover:text-vault-cyan transition-colors">
+              <span>How does the 1-hour expiration and automatic cleanup work?</span>
+              <i id="faq-icon-2" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+            </button>
+            <div id="faq-answer-2" class="hidden p-5 pt-0 text-sm text-slate-300 font-normal leading-relaxed border-t border-vault-850">
+              When a share link is created, an ephemeral record with a strict 60-minute TTL is stored. A background worker purges expired records automatically, permanently erasing the file.
+            </div>
+          </div>
+
+          <div class="cyber-card rounded-xl border border-vault-800 overflow-hidden">
+            <button onclick="toggleFaq(3)" class="w-full p-5 text-left flex items-center justify-between gap-4 font-heading font-bold text-base text-white hover:text-vault-cyan transition-colors">
+              <span>What happens if I lose my encryption password?</span>
+              <i id="faq-icon-3" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+            </button>
+            <div id="faq-answer-3" class="hidden p-5 pt-0 text-sm text-slate-300 font-normal leading-relaxed border-t border-vault-850">
+              Because Himitsu Kinko operates under strict zero-knowledge cryptography, your password is never stored or transmitted anywhere. Without the correct password, the file cannot be decrypted.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="relative z-10 bg-vault-950 border-t border-vault-800/80 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg cyber-cyan-gradient p-[2px]">
+            <div class="w-full h-full bg-vault-950 rounded-md flex items-center justify-center">
+              <i class="fa-solid fa-vault text-vault-cyan text-sm"></i>
+            </div>
+          </div>
+          <span class="font-heading font-bold text-white text-base">HIMITSU KINKO</span>
+          <span class="text-xs font-mono text-slate-500">· “Secure. Encrypt. Protect.”</span>
+        </div>
+
+        <div class="flex items-center gap-6">
+          <a href="admin.html" class="text-xs font-mono text-slate-600 hover:text-slate-400 transition-colors flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-halved text-[10px]"></i> Admin Portal &rarr;
+          </a>
+          <p class="text-xs text-slate-500 text-center md:text-right">
+            &copy; <span id="current-year">2026</span> HIMITSU KINKO. Client-Side AES-256-GCM.
+          </p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= USER LOGIN MODAL ================= -->
+  <!-- Recommended Login Structure: Google -> OR -> Email & Password -> Small Admin Portal link -->
+  <div id="auth-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="cyber-card rounded-2xl p-6 sm:p-8 max-w-md w-full border border-vault-700 shadow-2xl relative">
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 rounded-xl bg-vault-cyan/15 text-vault-cyan flex items-center justify-center text-2xl mx-auto mb-3">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h3 class="font-heading font-black text-2xl text-white">User Login</h3>
+        <p class="text-xs text-slate-400 mt-1">HIMITSU KINKO</p>
+      </div>
+
+      <div id="auth-modal-notice" class="hidden mb-4 p-3 rounded-xl bg-vault-cyan/10 border border-vault-cyan/30 text-xs font-mono text-vault-cyan"></div>
+
+      <!-- Continue with Google Button -->
+      <button type="button" onclick="handleGoogleLogin()" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-heading font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-3 shadow-md hover:shadow-lg transition-all mb-4">
+        <svg class="w-4 h-4" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Continue with Google</span>
+      </button>
+
+      <!-- Divider -->
+      <div class="relative flex py-2 items-center mb-4">
+        <div class="flex-grow border-t border-vault-800"></div>
+        <span class="flex-shrink mx-4 text-xs font-mono text-slate-500 uppercase tracking-widest">OR</span>
+        <div class="flex-grow border-t border-vault-800"></div>
+      </div>
+
+      <!-- State 1: Sign In Mode -->
+      <div id="auth-mode-login">
+        <form onsubmit="handleUserLoginSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-mono text-slate-300 uppercase mb-1.5">Email</label>
+            <input type="text" id="login-email" required placeholder="name@example.com" class="w-full px-4 py-3 rounded-xl bg-vault-950 border border-vault-700 focus:border-vault-cyan text-white text-sm font-mono outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono text-slate-300 uppercase mb-1.5">Password</label>
+            <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl bg-vault-950 border border-vault-700 focus:border-vault-cyan text-white text-sm font-mono outline-none">
+          </div>
+
+          <button type="submit" class="w-full py-3.5 rounded-xl cyber-cyan-gradient text-vault-950 font-heading font-bold text-sm uppercase tracking-wider shadow-lg hover:brightness-110 transition-all">
+            Sign In
+          </button>
+        </form>
+
+        <div class="mt-4 text-center text-xs font-mono text-slate-400">
+          Don't have an account? 
+          <button type="button" onclick="switchAuthMode('register')" class="text-vault-cyan hover:underline font-bold">
+            Create account
+          </button>
+        </div>
+      </div>
+
+      <!-- State 2: Register Mode -->
+      <div id="auth-mode-register" class="hidden">
+        <form onsubmit="handleUserRegisterSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-mono text-slate-300 uppercase mb-1.5">Email or Handle</label>
+            <input type="text" id="reg-email" required placeholder="name@example.com" class="w-full px-4 py-3 rounded-xl bg-vault-950 border border-vault-700 focus:border-vault-cyan text-white text-sm font-mono outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono text-slate-300 uppercase mb-1.5">Create Password</label>
+            <input type="password" id="reg-password" required placeholder="Minimum 6 characters" class="w-full px-4 py-3 rounded-xl bg-vault-950 border border-vault-700 focus:border-vault-cyan text-white text-sm font-mono outline-none">
+          </div>
+
+          <button type="submit" class="w-full py-3.5 rounded-xl cyber-cyan-gradient text-vault-950 font-heading font-bold text-sm uppercase tracking-wider shadow-lg hover:brightness-110 transition-all">
+            Create Account
+          </button>
+        </form>
+
+        <div class="mt-4 text-center text-xs font-mono text-slate-400">
+          Already have an account? 
+          <button type="button" onclick="switchAuthMode('login')" class="text-vault-cyan hover:underline font-bold">
+            Sign In
+          </button>
+        </div>
+      </div>
+
+      <div id="auth-error" class="hidden mt-3 p-3 rounded-xl bg-rose-950/50 border border-rose-500 text-rose-300 text-xs font-mono"></div>
+
+      <!-- Small, less prominent link to dedicated Admin Portal -->
+      <div class="mt-6 pt-4 border-t border-vault-800 text-center">
+        <a href="admin.html" class="text-[11px] font-mono text-slate-500 hover:text-vault-cyan transition-colors inline-flex items-center gap-1.5">
+          <i class="fa-solid fa-lock text-[10px]"></i> Admin Portal &rarr;
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LINK GENERATION MODAL -->
+  <div id="share-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="cyber-card rounded-2xl p-6 sm:p-8 max-w-lg w-full border border-vault-700 shadow-2xl relative">
+      <button onclick="closeShareModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center gap-3 pb-4 border-b border-vault-800 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-vault-cyan/15 text-vault-cyan flex items-center justify-center text-xl shrink-0">
+          <i class="fa-solid fa-share-nodes"></i>
+        </div>
+        <div>
+          <h3 class="font-heading font-black text-xl text-white">Generate Secure Sharing Link</h3>
+          <p class="text-xs font-mono text-slate-400">Zero-Knowledge Ephemeral Storage</p>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="p-4 rounded-xl bg-vault-950/80 border border-vault-800 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-fire text-rose-400 text-lg"></i>
+            <div>
+              <div class="text-sm font-heading font-bold text-white">One-Time Download Link</div>
+              <div class="text-xs text-slate-400">Destroy file immediately after 1st download</div>
+            </div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="share-onetime-toggle" class="sr-only peer">
+            <div class="w-11 h-6 bg-vault-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-vault-cyan"></div>
+          </label>
+        </div>
+
+        <div class="p-4 rounded-xl bg-vault-950/80 border border-vault-800 flex items-center gap-3 text-xs font-mono text-slate-300">
+          <i class="fa-solid fa-stopwatch text-vault-warning text-base shrink-0"></i>
+          <span>Maximum Lifetime: <strong>60 Minutes</strong>. Cleaned up automatically.</span>
+        </div>
+
+        <button type="button" onclick="confirmGenerateShareLink()" class="w-full py-3.5 rounded-xl cyber-cyan-gradient text-vault-950 font-heading font-bold text-sm uppercase tracking-wider shadow-lg hover:brightness-110 transition-all">
+          Generate Expiring Link
+        </button>
+
+        <!-- Result Box -->
+        <div id="share-link-result" class="hidden pt-4 border-t border-vault-800 space-y-3">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-slate-400">Generated Secure Link:</span>
+            <span id="share-link-type-badge" class="px-2 py-0.5 rounded text-[10px] font-mono">1-HOUR LINK</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input type="text" id="share-link-input" readonly class="w-full px-3.5 py-2.5 rounded-lg bg-vault-950 border border-vault-700 text-vault-cyan font-mono text-xs outline-none select-all">
+            <button onclick="copyShareLink()" class="px-4 py-2.5 rounded-lg cyber-cyan-gradient text-vault-950 font-heading font-bold text-xs uppercase tracking-wider shrink-0 hover:brightness-110">
+              <i class="fa-solid fa-copy"></i>
+            </button>
+          </div>
+
+          <p class="text-[11px] font-mono text-slate-400">
+            Share this link and your master password with the recipient over separate secure channels.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modular Scripts -->
+  <script src="js/crypto.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
