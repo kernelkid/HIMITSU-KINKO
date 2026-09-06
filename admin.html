@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal — HIMITSU KINKO | Security & Telemetry</title>
+  <meta name="description" content="Dedicated administrative security dashboard for Himitsu Kinko. Metadata, telemetry, and security monitoring only. Zero access to sensitive user files.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Tailwind CSS & Modular Config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="tailwind-config.js"></script>
+
+  <!-- External Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-vault-950 text-slate-200 font-sans antialiased min-h-screen relative selection:bg-vault-cyan selection:text-vault-950 flex flex-col justify-between">
+
+  <!-- Background Grids & Atmosphere -->
+  <div class="fixed inset-0 grid-pattern pointer-events-none z-0"></div>
+  <div class="fixed top-0 left-1/3 w-96 h-96 bg-vault-cyan/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+  <div class="fixed bottom-10 right-1/4 w-[32rem] h-[32rem] bg-vault-electric/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-50 bg-vault-950/85 backdrop-blur-xl border-b border-vault-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="index.html" class="flex items-center gap-3.5 group">
+        <div class="w-11 h-11 rounded-xl cyber-cyan-gradient p-[2px] shadow-lg shadow-vault-cyan/20 group-hover:shadow-vault-cyan/40 transition-all duration-300">
+          <div class="w-full h-full bg-vault-950 rounded-[10px] flex items-center justify-center">
+            <i class="fa-solid fa-shield-halved text-vault-cyan text-xl group-hover:scale-110 transition-transform"></i>
+          </div>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="font-heading font-black text-2xl tracking-wider text-white">HIMITSU KINKO</span>
+            <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 rounded border border-rose-500/30">Admin Portal</span>
+          </div>
+          <span class="text-[11px] font-mono text-slate-400 tracking-widest uppercase">Security & Metadata Telemetry</span>
+        </div>
+      </a>
+
+      <!-- Header Right Controls -->
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors">
+          <i class="fa-solid fa-arrow-left"></i> Back to Main Site
+        </a>
+        <div id="admin-session-badge" class="hidden flex items-center gap-2">
+          <span class="px-3 py-1.5 rounded-full bg-vault-emerald/15 text-vault-emerald font-mono text-xs border border-vault-emerald/30">
+            <i class="fa-solid fa-circle-check mr-1"></i> Admin Session Active
+          </span>
+          <button onclick="handleAdminLogout()" class="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-mono border border-rose-500/30 transition-all">
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="relative z-10 flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+
+    <!-- STATE A: ADMIN LOGIN FORM (Displayed when NOT authenticated as admin) -->
+    <div id="admin-auth-container" class="max-w-md mx-auto my-12">
+      <div class="cyber-card rounded-2xl p-8 border border-vault-700 shadow-2xl relative">
+        
+        <div class="text-center mb-6">
+          <div class="w-12 h-12 rounded-xl bg-vault-cyan/15 text-vault-cyan flex items-center justify-center text-2xl mx-auto mb-3">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h2 class="font-heading font-black text-2xl text-white">🛡️ HIMITSU KINKO Admin</h2>
+          <p class="text-xs text-slate-400 mt-1">Authorized Administrative Access Only</p>
+        </div>
+
+        <!-- Privacy Notice Banner -->
+        <div class="p-3.5 rounded-xl bg-vault-950 border border-vault-800 text-[11px] font-mono text-slate-300 mb-6">
+          <span class="text-vault-warning font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Privacy Compliance:</span>
+          Admin dashboard displays metadata and operational events only. Zero-knowledge cryptography guarantees that no file contents or keys are stored or accessible.
+        </div>
+
+        <!-- Admin Login Form -->
+        <form onsubmit="handleAdminLoginSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-mono text-slate-300 uppercase mb-1.5">Admin Email</label>
+            <input type="email" id="admin-email" required placeholder="admin@himitsukinko.com" class="w-full px-4 py-3 rounded-xl bg-vault-950 border border-vault-700 focus:border-vault-cyan text-white text-sm font-mono outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono text-slate-300 uppercase mb-1.5">Admin Password</label>
+            <input type="password" id="admin-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl bg-vault-950 border border-vault-700 focus:border-vault-cyan text-white text-sm font-mono outline-none">
+          </div>
+
+          <div id="admin-error-box" class="hidden p-3 rounded-xl bg-rose-950/50 border border-rose-500 text-rose-300 text-xs font-mono"></div>
+
+          <button type="submit" class="w-full py-3.5 rounded-xl cyber-cyan-gradient text-vault-950 font-heading font-bold text-sm uppercase tracking-wider shadow-lg hover:brightness-110 transition-all">
+            Admin Sign In
+          </button>
+        </form>
+
+        <div class="mt-6 pt-4 border-t border-vault-800 text-center">
+          <p class="text-[11px] font-mono text-slate-500">
+            Demo credentials: <code class="text-vault-cyan">admin@himitsukinko.com</code> / <code class="text-vault-cyan">admin123</code>
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- STATE B: PROTECTED ADMIN DASHBOARD (Displayed ONLY when authenticated) -->
+    <div id="admin-dashboard-view" class="hidden">
+      
+      <!-- Dashboard Header -->
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-vault-850 border border-vault-cyan/30 text-vault-cyan text-xs font-mono uppercase tracking-wider mb-2">
+            <i class="fa-solid fa-gauge-high"></i> Administrative Control
+          </div>
+          <h1 class="font-heading font-black text-3xl sm:text-4xl text-white">System Monitoring & Telemetry</h1>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">
+            Real-time metadata telemetry, storage usage, and security events.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="refreshAdminDashboardData()" class="px-4 py-2 rounded-xl bg-vault-800 hover:bg-vault-700 text-slate-200 text-xs font-mono border border-vault-700 flex items-center gap-2 transition-all">
+            <i class="fa-solid fa-rotate-right"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Overview Cards (Users, Files, Security) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        
+        <div class="cyber-card rounded-2xl p-6 border border-vault-800 flex items-center justify-between">
+          <div>
+            <div class="text-xs font-mono text-slate-400 uppercase tracking-wider">Registered Users</div>
+            <div id="adm-metric-users" class="font-heading font-black text-4xl text-white mt-2">0</div>
+            <div class="text-xs font-mono text-vault-cyan mt-1">Accounts active</div>
+          </div>
+          <div class="w-14 h-14 rounded-2xl bg-vault-cyan/10 border border-vault-cyan/20 flex items-center justify-center text-vault-cyan text-2xl">
+            <i class="fa-solid fa-users"></i>
+          </div>
+        </div>
+
+        <div class="cyber-card rounded-2xl p-6 border border-vault-800 flex items-center justify-between">
+          <div>
+            <div class="text-xs font-mono text-slate-400 uppercase tracking-wider">Ephemeral Files</div>
+            <div id="adm-metric-files" class="font-heading font-black text-4xl text-vault-emerald mt-2">0</div>
+            <div id="adm-metric-storage" class="text-xs font-mono text-slate-400 mt-1">0 Bytes in buffer</div>
+          </div>
+          <div class="w-14 h-14 rounded-2xl bg-vault-emerald/10 border border-vault-emerald/20 flex items-center justify-center text-vault-emerald text-2xl">
+            <i class="fa-solid fa-box-archive"></i>
+          </div>
+        </div>
+
+        <div class="cyber-card rounded-2xl p-6 border border-vault-800 flex items-center justify-between">
+          <div>
+            <div class="text-xs font-mono text-slate-400 uppercase tracking-wider">Security Events</div>
+            <div id="adm-metric-events" class="font-heading font-black text-4xl text-vault-warning mt-2">0</div>
+            <div class="text-xs font-mono text-slate-400 mt-1">Audit log count</div>
+          </div>
+          <div class="w-14 h-14 rounded-2xl bg-vault-warning/10 border border-vault-warning/20 flex items-center justify-center text-vault-warning text-2xl">
+            <i class="fa-solid fa-shield-virus"></i>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Admin Navigation Subtabs -->
+      <div class="cyber-card rounded-2xl border border-vault-800 overflow-hidden mb-8">
+        <div class="flex flex-wrap items-center gap-2 p-3 bg-vault-950/90 border-b border-vault-800">
+          <button id="tab-btn-act" onclick="switchAdminPortalTab('activity')" class="px-4 py-2 rounded-lg font-heading font-bold text-xs uppercase tracking-wider transition-all admin-tab-active border">
+            <i class="fa-solid fa-chart-line mr-1.5"></i> Recent Activity
+          </button>
+          <button id="tab-btn-usr" onclick="switchAdminPortalTab('users')" class="px-4 py-2 rounded-lg font-heading font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:text-white border border-transparent">
+            <i class="fa-solid fa-users mr-1.5"></i> Users Directory
+          </button>
+          <button id="tab-btn-sto" onclick="switchAdminPortalTab('storage')" class="px-4 py-2 rounded-lg font-heading font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:text-white border border-transparent">
+            <i class="fa-solid fa-database mr-1.5"></i> Ephemeral Storage
+          </button>
+          <button id="tab-btn-sec" onclick="switchAdminPortalTab('security')" class="px-4 py-2 rounded-lg font-heading font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:text-white border border-transparent">
+            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Security Telemetry
+          </button>
+        </div>
+
+        <!-- 1. Recent Activity View -->
+        <div id="admin-view-activity" class="p-6">
+          <h3 class="font-heading font-bold text-sm text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-vault-cyan"></i> Real-time Operational Stream
+          </h3>
+          <div id="adm-activity-feed" class="space-y-1">
+            <!-- Dynamic stream -->
+          </div>
+        </div>
+
+        <!-- 2. Users Directory View -->
+        <div id="admin-view-users" class="hidden p-6">
+          <h3 class="font-heading font-bold text-sm text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-address-book text-vault-cyan"></i> Registered Account Metadata
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="border-b border-vault-800 text-[11px] font-mono uppercase text-slate-400">
+                  <th class="py-2.5 px-3">User ID / Email</th>
+                  <th class="py-2.5 px-3">Auth Provider</th>
+                  <th class="py-2.5 px-3">Registration Date</th>
+                  <th class="py-2.5 px-3">Role</th>
+                </tr>
+              </thead>
+              <tbody id="adm-users-table">
+                <!-- Dynamic rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. Ephemeral Storage View -->
+        <div id="admin-view-storage" class="hidden p-6">
+          <h3 class="font-heading font-bold text-sm text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-hourglass-half text-vault-cyan"></i> Active Ephemeral Files (Strict 1-Hour TTL)
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="border-b border-vault-800 text-[11px] font-mono uppercase text-slate-400">
+                  <th class="py-2.5 px-3">Filename</th>
+                  <th class="py-2.5 px-3">Owner</th>
+                  <th class="py-2.5 px-3">Encrypted Size</th>
+                  <th class="py-2.5 px-3">TTL Remaining</th>
+                  <th class="py-2.5 px-3">Mode</th>
+                </tr>
+              </thead>
+              <tbody id="adm-storage-table">
+                <!-- Dynamic rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 4. Security Events View -->
+        <div id="admin-view-security" class="hidden p-6">
+          <h3 class="font-heading font-bold text-sm text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-vault-cyan"></i> Security & Integrity Events
+          </h3>
+          <div id="adm-security-feed" class="space-y-1">
+            <!-- Dynamic stream -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Zero Knowledge Privacy Guarantee Card -->
+      <div class="p-6 rounded-2xl bg-vault-900/60 border border-vault-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs font-mono">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-vault-emerald/10 text-vault-emerald flex items-center justify-center text-lg shrink-0">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <div>
+            <span class="text-white font-bold block">Zero-Knowledge Architecture Strictly Enforced</span>
+            <span class="text-slate-400">Administrator access has zero ability to view, decrypt, or download private user file contents.</span>
+          </div>
+        </div>
+        <div class="text-slate-500 shrink-0">
+          W3C Web Cryptography API compliant
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="relative z-10 bg-vault-950 border-t border-vault-800/80 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="text-xs font-mono text-slate-500">
+        &copy; 2026 HIMITSU KINKO. Secure. Encrypt. Protect.
+      </div>
+      <a href="index.html" class="text-xs font-mono text-vault-cyan hover:underline">
+        Back to Public Platform
+      </a>
+    </div>
+  </footer>
+
+  <!-- Modular Scripts -->
+  <script src="crypto.js"></script>
+  <script src="auth.js"></script>
+  <script src="storage.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
